@@ -1,7 +1,7 @@
 package zad1ZTP.model;
 
 import lombok.*;
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
@@ -29,7 +29,4 @@ public class ProductHistory {
 
     @Column(name = "new_value", columnDefinition = "TEXT")
     private String newValue;
-
-    @Column(name = "changed_by", length = 100)
-    private String changedBy;
 }

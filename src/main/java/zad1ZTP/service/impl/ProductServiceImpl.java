@@ -4,11 +4,12 @@ import zad1ZTP.exception.ResourceNotFoundException;
 import zad1ZTP.exception.ValidationException;
 import zad1ZTP.model.ForbiddenPhrase;
 import zad1ZTP.model.Product;
+import zad1ZTP.model.ProductHistory;
 import zad1ZTP.repository.ForbiddenPhraseRepository;
+import zad1ZTP.repository.ProductHistoryRepository;
 import zad1ZTP.repository.ProductRepository;
 import zad1ZTP.service.ProductService;
-import zad1ZTP.model.ProductHistory;
-import zad1ZTP.repository.ProductHistoryRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -50,99 +52,115 @@ public class ProductServiceImpl implements ProductService {
 
         saveHistory(saved, "created", null, snapshot(saved));
 
-        @Override
-        @Transactional
-        public Product update(Long id, Product product) {
-            Product existing = productRepository.findById(id)
-                    .orElseThrow(() -> new ResourceNotFoundException("Product with id " + id + " not found"));
+        return saved;
+    }
 
-            // zachowanie starych wartosci
-            String oldName = existing.getName();
-            BigDecimal oldPrice = existing.getPrice();
-            Integer oldQty = existing.getQuantity();
-            Product.Category oldCat = existing.getCategory();
+    @Override
+    @Transactional(readOnly = true)
+    public Product getById(Long id) {
+        return productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product with id " + id + " not found"));
+    }
 
-            // Name
-            if (!existing.getName().equalsIgnoreCase(product.getName())) {
-                validateName(product.getName(), id);
-                productRepository.findByNameIgnoreCase(product.getName())
-                        .ifPresent(p -> {
-                            if (!p.getId().equals(id)) {
-                                throw new ValidationException("name", "A product with this name already exists");
-                            }
-                        });
-                checkForbidden(product.getName());
-                existing.setName(product.getName());
-            }
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Product> listAll(Pageable pageable) {
+        return productRepository.findAll(pageable);
+    }
 
-            // Category
-            existing.setCategory(product.getCategory());
 
-            // Price
-            validatePrice(product.getPrice(), existing.getCategory());
-            existing.setPrice(product.getPrice());
+    @Override
+    @Transactional
+    public Product update(Long id, Product product) {
+        Product existing = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product with id " + id + " not found"));
 
-            // Quantity
-            validateQuantity(product.getQuantity());
-            existing.setQuantity(product.getQuantity());
+        // zachowanie starych wartości
+        String oldName = existing.getName();
+        BigDecimal oldPrice = existing.getPrice();
+        Integer oldQty = existing.getQuantity();
+        Product.Category oldCat = existing.getCategory();
 
-            Product saved = productRepository.save(existing);
-
-            // zapisz do historii tylko zmienione pola
-            if (!oldName.equals(saved.getName())) {
-                saveHistory(saved, "name", oldName, saved.getName());
-            }
-            if (oldPrice == null || saved.getPrice() == null || oldPrice.compareTo(saved.getPrice()) != 0) {
-                saveHistory(saved, "price", oldPrice == null ? null : oldPrice.toString(), saved.getPrice().toString());
-            }
-            if (!oldQty.equals(saved.getQuantity())) {
-                saveHistory(saved, "quantity", oldQty == null ? null : oldQty.toString(), saved.getQuantity().toString());
-            }
-            if (oldCat != saved.getCategory()) {
-                saveHistory(saved, "category", oldCat == null ? null : oldCat.name(), saved.getCategory().name());
-            }
-
-            return saved;
+        // Name
+        if (!existing.getName().equalsIgnoreCase(product.getName())) {
+            validateName(product.getName(), id);
+            productRepository.findByNameIgnoreCase(product.getName())
+                    .ifPresent(p -> {
+                        if (!p.getId().equals(id)) {
+                            throw new ValidationException("name", "A product with this name already exists");
+                        }
+                    });
+            checkForbidden(product.getName());
+            existing.setName(product.getName());
         }
 
-        @Override
-        @Transactional
-        public void delete(Long id) {
-            Product existing = productRepository.findById(id)
-                    .orElseThrow(() -> new ResourceNotFoundException("Product with id " + id + " not found"));
+        // Category
+        existing.setCategory(product.getCategory());
 
-            // dodaj wpis historyczny typu deleted (zrzut stanu przed usunięciem)
-            saveHistory(existing, "deleted", snapshot(existing), "deleted");
+        // Price
+        validatePrice(product.getPrice(), existing.getCategory());
+        existing.setPrice(product.getPrice());
 
-            productRepository.deleteById(id);
+        // Quantity
+        validateQuantity(product.getQuantity());
+        existing.setQuantity(product.getQuantity());
+
+        Product saved = productRepository.save(existing);
+
+        // zapisz do historii tylko zmienione pola
+        if (!oldName.equals(saved.getName())) {
+            saveHistory(saved, "name", oldName, saved.getName());
+        }
+        if (oldPrice == null || saved.getPrice() == null || oldPrice.compareTo(saved.getPrice()) != 0) {
+            saveHistory(saved, "price", oldPrice == null ? null : oldPrice.toString(), saved.getPrice().toString());
+        }
+        if (!oldQty.equals(saved.getQuantity())) {
+            saveHistory(saved, "quantity", oldQty == null ? null : oldQty.toString(), saved.getQuantity().toString());
+        }
+        if (oldCat != saved.getCategory()) {
+            saveHistory(saved, "category", oldCat == null ? null : oldCat.name(), saved.getCategory().name());
         }
 
-        @Override
-        @Transactional(readOnly = true)
-        public List<ProductHistory> getHistory(Long productId) {
-            return historyRepository.findByProductIdOrderByChangedAtDesc(productId);
-        }
+        return saved;
+    }
 
-        // ---------- helpers ----------
-        private void saveHistory(Product product, String field, String oldValue, String newValue) {
-            ProductHistory h = ProductHistory.builder()
-                    .product(product)
-                    .changedAt(LocalDateTime.now())
-                    .fieldName(field)
-                    .oldValue(oldValue)
-                    .newValue(newValue)
-                    .build();
-            historyRepository.save(h);
-        }
+    @Override
+    @Transactional
+    public void delete(Long id) {
+        Product existing = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product with id " + id + " not found"));
 
-        // wygodny "snapshot" całego rekordu jako tekst — użyteczny przy create/delete
-        private String snapshot(Product p) {
-            return String.format("id=%s;name=%s;category=%s;price=%s;quantity=%s",
-                    p.getId(), p.getName(), p.getCategory() == null ? null : p.getCategory().name(),
-                    p.getPrice() == null ? null : p.getPrice().toString(),
-                    p.getQuantity());
-        }
+        // dodaj wpis historyczny typu deleted (zrzut stanu przed usunięciem)
+        saveHistory(existing, "deleted", snapshot(existing), "deleted");
 
+        productRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductHistory> getHistory(Long productId) {
+        return historyRepository.findByProductIdOrderByChangedAtDesc(productId);
+    }
+
+    // ---------- helpers ----------
+
+    private void saveHistory(Product product, String field, String oldValue, String newValue) {
+        ProductHistory h = ProductHistory.builder()
+                .product(product)
+                .changedAt(LocalDateTime.now())
+                .fieldName(field)
+                .oldValue(oldValue)
+                .newValue(newValue)
+                .build();
+        historyRepository.save(h);
+    }
+
+    private String snapshot(Product p) {
+        return String.format("id=%s;name=%s;category=%s;price=%s;quantity=%s",
+                p.getId(), p.getName(), p.getCategory() == null ? null : p.getCategory().name(),
+                p.getPrice() == null ? null : p.getPrice().toString(),
+                p.getQuantity());
+    }
 
     private void validateName(String name, Long selfId) {
         if (name == null || name.isBlank()) throw new ValidationException("name", "Name must not be blank");

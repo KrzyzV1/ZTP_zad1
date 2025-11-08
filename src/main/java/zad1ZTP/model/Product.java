@@ -1,9 +1,10 @@
 package zad1ZTP.model;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import jakarta.persistence.Entity;
 import lombok.*;
-import javax.persistence.*;
-import javax.validation.constraints.*;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
