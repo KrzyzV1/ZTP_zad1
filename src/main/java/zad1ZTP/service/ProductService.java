@@ -11,7 +11,7 @@ public interface ProductService {
     Product create(Product product);
     Product update(Long id, Product product);
     void delete(Long id);
-    Product getById(Long id); // ← to jest właśnie brakująca metoda
+    Product getById(Long id);
     List<ProductHistory> getHistory(Long productId);
     Page<Product> listAll(Pageable pageable);
 }
