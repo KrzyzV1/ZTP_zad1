@@ -3,43 +3,43 @@ GET http://localhost:8080/api/v1/products
 Accept: application/json
 
 ### 2) GET - produkt po id
-GET http://localhost:8080/api/v1/products/1
+GET http://localhost:8080/api/v1/products/33
 Accept: application/json
 
-### 3) POST - dodanie nowego produktu
+### 3) DELETE - usuń produkt
+DELETE http://localhost:8080/api/v1/products/6
+
+### 4) POST - dodanie nowego produktu
 POST http://localhost:8080/api/v1/products
 Content-Type: application/json
 
 {
   "quantity": 10,
-  "name": "ButySkorzane",
+  "name": "ProduktKurtka",
   "category": "CLOTHING",
   "price": 159.99
 }
 
-### 4) PUT - zaktualizuj nowy produkt
-PUT http://localhost:8080/api/v1/products/31
+### 5) PUT - zaktualizuj nowy produkt
+PUT http://localhost:8080/api/v1/products/33
 Content-Type: application/json
 
 {
-  "quantity": 12,
-  "name": "ButySkorzane",
+  "quantity": 16,
+  "name": "ProduktKurtka",
   "category": "CLOTHING",
   "price": 120.00
 }
 
-### 5) GET - wyświetl historię zmian produktu
-GET http://localhost:8080/api/v1/products/31/history
+### 6) GET - wyświetl historię zmian produktu
+GET http://localhost:8080/api/v1/products/33/history
 Accept: application/json
-
-### 6) DELETE - usuń produkt
-DELETE http://localhost:8080/api/v1/products/31
 
 ### 7) GET - wyświetl listę forbidden phrases
 GET http://localhost:8080/api/v1/forbidden-phrases
 Accept: application/json
 
-### 8) POST - próba dodania produktu o nazwie zawierającej "free" (powinna zostać zablokowana, jeśli "free" jest na liście zabronionych)
+### 8) POST - próba dodania produktu o nazwie zabronionej
 POST http://localhost:8080/api/v1/products
 Content-Type: application/json
 
@@ -50,7 +50,7 @@ Content-Type: application/json
   "price": 199.99
 }
 
-### 9) POST - dodaj frazę "forbidden" do forbidden_phrases (skopiuj id zwrócony w odpowiedzi jako <FORBIDDEN_ID>)
+### 9) POST - dodanie frazy zabronionej
 POST http://localhost:8080/api/v1/forbidden-phrases
 Content-Type: application/json
 
@@ -58,7 +58,5 @@ Content-Type: application/json
   "phrase": "forbidden"
 }
 
-### Po wykonaniu powyższego POST: skopiuj pole "id" i wklej zamiast <FORBIDDEN_ID>
-
-### 10) DELETE - usunięcie frazy
-DELETE http://localhost:8080/api/v1/forbidden-phrases/<FORBIDDEN_ID>
+### 10) DELETE - usunięcie frazy zabronionej
+DELETE http://localhost:8080/api/v1/forbidden-phrases/20

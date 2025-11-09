@@ -127,13 +127,9 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public void delete(Long id) {
-        Product existing = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product with id " + id + " not found"));
-
-        // dodaj wpis historyczny typu deleted (zrzut stanu przed usunięciem)
-        saveHistory(existing, "deleted", snapshot(existing), "deleted");
-
-        productRepository.deleteById(id);
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found with id " + id));
+        productRepository.delete(product);
     }
 
     @Override
