@@ -139,7 +139,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public List<ProductHistory> getHistory(Long productId) {
-        return historyRepository.findByProductIdOrderByChangedAtDesc(productId);
+        return historyRepository.findByProduct_IdOrderByChangedAtDesc(productId);
     }
 
     // ---------- helpers ----------
